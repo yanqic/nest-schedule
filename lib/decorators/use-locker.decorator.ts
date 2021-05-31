@@ -3,7 +3,8 @@ import { extendMetadata } from '../utils/metadata.util';
 import { GUARDS_METADATA, NEST_SCHEDULE_LOCKER } from '../constants';
 import { ILocker } from '../interfaces/locker.interface';
 
-export const UseLocker = (Locker: ILocker | Function): MethodDecorator => (
+/** 通过装饰器实现锁 */
+export const UseLocker = (Locker: ILocker): MethodDecorator => (
   target,
   key,
   descriptor,

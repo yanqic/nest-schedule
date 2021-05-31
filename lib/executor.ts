@@ -11,17 +11,20 @@ export class Executor {
   async execute(
     jobKey: string,
     callback: () => Promise<Stop> | Stop,
-    tryLock: Promise<TryLock> | TryLock,
+    tryLock: Promise<TryLock> | TryLock | undefined,
   ): Promise<Stop> {
     let release;
+
     if (typeof tryLock === 'function') {
       try {
         release = await tryLock(jobKey);
+
         if (!release) {
           return false;
         }
       } catch (e) {
         this.logger.error(`Try lock job ${jobKey} fail. ${e.message}`, e.stack);
+
         return false;
       }
     }
@@ -43,13 +46,16 @@ export class Executor {
   ): Promise<Stop> {
     try {
       const result = await callback();
+
       this.clear();
+
       return result;
     } catch (e) {
       this.logger.error(`Execute job ${jobKey} fail.`, e.stack);
+
       if (
         this.configs.maxRetry !== -1 &&
-        this.currentRetryCount < this.configs.maxRetry
+        this.currentRetryCount < this.configs.maxRetry!
       ) {
         if (this.timer) {
           clearTimeout(this.timer);
@@ -59,16 +65,15 @@ export class Executor {
           this.timer = setTimeout(async () => {
             this.currentRetryCount++;
             resolve(await this.run(jobKey, callback));
-          }, this.configs.retryInterval);
+          }, this.configs.retryInterval!);
         });
-        return false;
-      } else {
-        this.logger.error(
-          `Job ${jobKey} already has max retry count.`,
-          e.stack,
-        );
+
         return false;
       }
+
+      this.logger.error(`Job ${jobKey} already has max retry count.`, e.stack);
+
+      return false;
     }
   }
 

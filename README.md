@@ -1,19 +1,14 @@
 
-[travis-image]: https://api.travis-ci.org/nest-cloud/nestcloud.svg?branch=master
-[travis-url]: https://travis-ci.org/nest-cloud/nestcloud
-[linux-image]: https://img.shields.io/travis/nest-cloud/nestcloud/master.svg?label=linux
-[linux-url]: https://travis-ci.org/nest-cloud/nestcloud
-
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo_text.svg" width="320" alt="Nest Logo" /></a>
 </p>
 
-# Nest Schedule
+# Nestjs Schedule
 
 <p align="center">
-    <a href="https://www.npmjs.com/~nest-schedule" target="_blank"><img src="https://img.shields.io/npm/v/nest-schedule.svg" alt="NPM Version"/></a>
-    <a href="https://www.npmjs.com/~nest-schedule" target="_blank"><img src="https://img.shields.io/npm/l/nest-schedule.svg" alt="Package License"/></a>
-    <a href="https://www.npmjs.com/~nest-schedule" target="_blank"><img src="https://img.shields.io/npm/dm/nest-schedule.svg" alt="NPM Downloads"/></a>
+    <a href="https://www.npmjs.com/~nestjs-schedule" target="_blank"><img src="https://img.shields.io/npm/v/nestjs-schedule.svg" alt="NPM Version"/></a>
+    <a href="https://www.npmjs.com/~nestjs-schedule" target="_blank"><img src="https://img.shields.io/npm/l/nestjs-schedule.svg" alt="Package License"/></a>
+    <a href="https://www.npmjs.com/~nestjs-schedule" target="_blank"><img src="https://img.shields.io/npm/dm/nestjs-schedule.svg" alt="NPM Downloads"/></a>
 </p>
 
 ## Description
@@ -24,7 +19,7 @@ This is a [Nest](https://github.com/nestjs/nest) module for using decorator sche
 ## Installation
 
 ```bash
-$ npm i --save nest-schedule
+$ npm i --save nestjs-schedule
 ```
 
 
@@ -32,7 +27,7 @@ $ npm i --save nest-schedule
 
 ```typescript
 import { Module } from '@nestjs/common';
-import { ScheduleModule } from 'nest-schedule';
+import { ScheduleModule } from 'nestjs-schedule';
 
 @Module({
   imports: [
@@ -45,7 +40,7 @@ export class AppModule {
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { Cron, Interval, Timeout, NestSchedule } from 'nest-schedule';
+import { Cron, Interval, Timeout, NestSchedule } from 'nestjs-schedule';
 
 @Injectable() // Only support SINGLETON scope
 export class ScheduleService extends NestSchedule {    
@@ -76,7 +71,7 @@ export class ScheduleService extends NestSchedule {
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { InjectSchedule, Schedule } from 'nest-schedule';
+import { InjectSchedule, Schedule } from 'nestjs-schedule';
 
 @Injectable()
 export class ScheduleService {    
@@ -104,7 +99,7 @@ export class ScheduleService {
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { Cron, NestDistributedSchedule } from 'nest-schedule';
+import { Cron, NestDistributedSchedule } from 'nestjs-schedule';
 
 @Injectable()
 export class ScheduleService extends NestDistributedSchedule {  
@@ -132,7 +127,7 @@ export class ScheduleService extends NestDistributedSchedule {
 #### 2. Use UseLocker decorator
 
 ```typescript
-import { ILocker, IScheduleConfig, InjectSchedule, Schedule } from 'nest-schedule';
+import { ILocker, IScheduleConfig, InjectSchedule, Schedule } from 'nestjs-schedule';
 import { Injectable } from '@nestjs/common';
 
 // If use NestCloud, it supports dependency injection.
@@ -165,7 +160,7 @@ export class MyLocker implements ILocker {
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { Cron, NestSchedule, UseLocker } from 'nest-schedule';
+import { Cron, NestSchedule, UseLocker } from 'nestjs-schedule';
 import { MyLocker } from './my.locker';
 
 @Injectable()

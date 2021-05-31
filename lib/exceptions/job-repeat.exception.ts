@@ -1,10 +1,10 @@
 export class JobRepeatException implements Error {
   message: string;
   name: string = 'JobRepeatException';
-  stack: string;
+  stack: string | undefined;
 
   constructor(message?: string, stack?: string) {
-    this.message = message;
+    this.message = message ?? '';
     this.stack = stack;
   }
 }

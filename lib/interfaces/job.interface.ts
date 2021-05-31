@@ -1,9 +1,9 @@
-import { IScheduleConfig } from './schedule-config.interface';
 import { Job } from 'node-schedule';
+import { IScheduleConfig } from './schedule-config.interface';
 
 export interface IJob {
   key: string;
-  config: IScheduleConfig;
+  config: IScheduleConfig | undefined;
   type: 'cron' | 'interval' | 'timeout';
   instance?: Job;
   timer?: NodeJS.Timer;

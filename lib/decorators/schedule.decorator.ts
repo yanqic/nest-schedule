@@ -15,12 +15,9 @@ export const Timeout = (milliseconds: number, config: IJobConfig = {}) =>
 export const Cron = (cron: string | ICronObject, config: ICronJobConfig = {}) =>
   createSchedule({ cron, ...config });
 
-const createSchedule = (config: IScheduleConfig) => (
-  target,
-  key,
-  descriptor,
-) => {
+const createSchedule = (config: IScheduleConfig) => (target, key) => {
   const identity = config.key ? config.key : key;
+
   extendMetadata(
     NEST_SCHEDULE_JOB_KEY,
     { ...config, key: identity, method: key },

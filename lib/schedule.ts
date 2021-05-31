@@ -12,7 +12,7 @@ export class Schedule {
 
   constructor(globalConfig?: IGlobalConfig) {
     if (globalConfig) {
-      for (const key in globalConfig) {
+      for (const key of Object.keys(globalConfig)) {
         defaults[key] = globalConfig[key];
       }
     }

@@ -1,23 +1,37 @@
 {
   "compilerOptions": {
     "module": "commonjs",
+    "lib": ["ESNext"],
     "declaration": true,
-    "noImplicitAny": false,
     "removeComments": true,
-    "noLib": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "target": "es6",
+    "allowSyntheticDefaultImports": true,
+    "target": "ES6",
+
     "sourceMap": false,
+    "allowJs": false,
+    "checkJs": false,
+    "noEmit": false,
+    "downlevelIteration": true,
+    "resolveJsonModule": true,
+    "allowUnreachableCode": false,
+    "moduleResolution": "node",
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noImplicitAny": false,
+    "importHelpers": true,
+    "strictNullChecks": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "noUnusedLocals": false,
+    "preserveConstEnums": true,
+
     "outDir": "./dist",
-    "rootDir": "./lib",
-    "skipLibCheck": true
+    "baseUrl": "./",
+    "rootDir": "./lib"
   },
-  "include": [
-    "lib/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "**/*.spec.ts"
-  ]
+  "exclude": ["tsconfig.json", "scripts", "dist", "test", "node_modules", "**/*spec.ts"]
 }

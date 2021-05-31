@@ -1,8 +1,8 @@
 {
-  "name": "nest-schedule",
-  "version": "0.6.4",
-  "description": "Nest - modern, fast, powerful node.js web framework (@schedule)",
-  "author": "Miaowing <i@zfeng.net>",
+  "name": "nestjs-schedule",
+  "version": "0.0.1",
+  "description": "nestjs distributed timer schedule lib",
+  "author": "yanqic <yanqi321@hotmail.com>",
   "license": "MIT",
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -11,45 +11,47 @@
     "publish:npm": "npm publish",
     "test": "ts-node -r tsconfig-paths/register test/TestClient.ts"
   },
-  "optionalDependencies": {
-    "@nestcloud/core": "^0.2.3"
-  },
   "peerDependencies": {
-    "@nestjs/common": "^6.0.5",
-    "@nestjs/core": "^6.1.1"
+    "@nestjs/common": "^7.6.17",
+    "@nestjs/core": "^7.6.17"
+  },
+  "dependencies": {
+    "@nestjs/common": "^7.6.17",
+    "@nestjs/core": "^7.6.17",
+    "node-schedule": "^2.0.0",
+    "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
-    "@nestcloud/core": "^0.2.3",
-    "@nestjs/common": "^6.0.5",
-    "@nestjs/core": "^6.1.1",
     "@types/lodash": "^4.14.108",
     "@types/node": "^7.0.41",
-    "@types/node-schedule": "^1.2.3",
+    "@types/node-schedule": "^1.3.1",
     "@types/reflect-metadata": "^0.1.0",
+    "@typescript-eslint/eslint-plugin": "^4.25.0",
+    "@typescript-eslint/parser": "^4.25.0",
+    "eslint": "^7.25.0",
+    "eslint-config-prettier": "^8.1.0",
+    "eslint-plugin-import": "2.22.1",
+    "eslint-plugin-prettier": "^3.3.1",
     "husky": "^0.14.3",
     "lint-staged": "^7.0.0",
     "mocha": "^6.0.2",
     "prettier": "^1.11.1",
     "ts-node": "^6.0.0",
     "tsconfig-paths": "^3.3.1",
-    "typescript": "^2.8.0"
+    "typescript": "^4.3.2"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/miaowing/schedule.git"
+    "url": "git+https://github.com:yanqi321/nest-schedule.git"
   },
   "bugs": {
-    "url": "https://github.com/miaowing/schedule/issues"
+    "url": "https://github.com:yanqi321/nest-schedule/issues"
   },
-  "homepage": "https://github.com/miaowing/schedule#readme",
+  "homepage": "https://github.com:yanqi321/nest-schedule#readme",
   "lint-staged": {
     "*.ts": [
       "prettier --write",
       "git add"
     ]
-  },
-  "dependencies": {
-    "node-schedule": "^1.3.0",
-    "reflect-metadata": "^0.1.12"
   }
 }
