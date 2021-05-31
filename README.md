@@ -13,7 +13,7 @@
 
 ## Description
 
-This is a [Nest](https://github.com/nestjs/nest) module for using decorator schedule jobs.
+Distributed Schedule module for [Nest](https://github.com/nestjs/nest) based on the node-schedule package.
 
 
 ## Installation
@@ -294,13 +294,6 @@ Inject Schedule instance
 ### UseLocker(locker: ILocker | Function): MethodDecorator
 
 Make your job support distribution.
- 
-If you use [NestCloud](https://github.com/nest-cloud/nestcloud), the Locker will support dependency injection, or not use injection please.
-
-
-## Stay in touch
-
-- Author - [miaowing](https://github.com/miaowing)
 
 ## License
 

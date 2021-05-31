@@ -1,9 +1,10 @@
 {
   "name": "nestjs-schedule",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "nestjs distributed timer schedule lib",
   "author": "yanqic <yanqi321@hotmail.com>",
   "license": "MIT",
+  "keywords": ["nestjs", "schedule", "distributed", "cluster"],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "precommit": "lint-staged",
