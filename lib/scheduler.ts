@@ -1,5 +1,5 @@
 import * as schedule from 'node-schedule';
-import { Job } from 'node-schedule';
+import { Job, RecurrenceRule } from 'node-schedule';
 import { Executor } from './executor';
 import { defaults } from './defaults';
 import {
@@ -194,6 +194,53 @@ export class Scheduler {
     }, timeout);
 
     this.addJob(key, 'timeout', config, { timer });
+
+    if (configs.immediate) {
+      this.runJobImmediately(key, configs, cb, tryLock);
+    }
+  }
+
+  public static scheduleRecurrenceJob(
+    key: string,
+    recurrenceRule: RecurrenceRule,
+    cb: JobCallback,
+    config?: ICronJobConfig,
+    tryLock?: Promise<TryLock> | TryLock,
+  ) {
+    this.assertJobNotExist(key);
+
+    const rule = new schedule.RecurrenceRule();
+    rule.year = recurrenceRule.year;
+    rule.month = recurrenceRule.month;
+    rule.date = recurrenceRule.date;
+    rule.dayOfWeek = recurrenceRule.dayOfWeek;
+    rule.hour = recurrenceRule.hour;
+    rule.minute = recurrenceRule.minute;
+    rule.second = recurrenceRule.second;
+    rule.tz = recurrenceRule.tz;
+
+    const configs = Object.assign({}, defaults, config);
+
+    const instance = schedule.scheduleJob(rule, async () => {
+      const job = this.jobs.get(key);
+
+      if (configs.waiting && job!.status !== READY) {
+        return;
+      }
+
+      job!.status = RUNNING;
+
+      const executor = new Executor(configs);
+      const needStop = await executor.execute(key, cb, tryLock);
+
+      job!.status = READY;
+
+      if (needStop) {
+        this.cancelJob(key);
+      }
+    });
+
+    this.addJob(key, 'cron', config, { instance });
 
     if (configs.immediate) {
       this.runJobImmediately(key, configs, cb, tryLock);

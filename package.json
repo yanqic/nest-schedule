@@ -1,10 +1,15 @@
 {
   "name": "nestjs-schedule",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "nestjs distributed timer schedule lib",
   "author": "yanqic <yanqic@hotmail.com>",
   "license": "MIT",
-  "keywords": ["nestjs", "schedule", "distributed", "cluster"],
+  "keywords": [
+    "nestjs",
+    "schedule",
+    "distributed",
+    "cluster"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "precommit": "lint-staged",
@@ -48,7 +53,7 @@
   "bugs": {
     "url": "https://github.com:yanqic/nest-schedule/issues"
   },
-  "homepage": "https://github.com:yanqic/nest-schedule#readme",
+  "homepage": "https://github.com/yanqic/nest-schedule#readme",
   "lint-staged": {
     "*.ts": [
       "prettier --write",

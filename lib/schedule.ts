@@ -6,6 +6,7 @@ import { IJobConfig } from './interfaces/job-config.interface';
 import { Scheduler } from './scheduler';
 import { IGlobalConfig } from './interfaces/global-config.interface';
 import { defaults } from './defaults';
+import { RecurrenceRule } from 'node-schedule';
 
 export class Schedule {
   private readonly scheduler = Scheduler;
@@ -33,6 +34,16 @@ export class Schedule {
     config?: ICronJobConfig,
   ) {
     this.scheduler.scheduleCronJob(key, cron, callback, config);
+  }
+
+  public scheduleRecurrenceJob(
+    key: string,
+    rule: RecurrenceRule,
+    cb: JobCallback,
+    config?: ICronJobConfig,
+    tryLock?: Promise<TryLock> | TryLock,
+  ) {
+    this.scheduler.scheduleRecurrenceJob(key, rule, cb, config, tryLock);
   }
 
   public scheduleIntervalJob(
