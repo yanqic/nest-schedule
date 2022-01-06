@@ -209,15 +209,16 @@ export class Scheduler {
   ) {
     this.assertJobNotExist(key);
 
-    const rule = new schedule.RecurrenceRule();
-    rule.year = recurrenceRule.year;
-    rule.month = recurrenceRule.month;
-    rule.date = recurrenceRule.date;
-    rule.dayOfWeek = recurrenceRule.dayOfWeek;
-    rule.hour = recurrenceRule.hour;
-    rule.minute = recurrenceRule.minute;
-    rule.second = recurrenceRule.second;
-    rule.tz = recurrenceRule.tz;
+    const rule = new schedule.RecurrenceRule(
+      recurrenceRule.year,
+      recurrenceRule.month,
+      recurrenceRule.date,
+      recurrenceRule.dayOfWeek,
+      recurrenceRule.hour,
+      recurrenceRule.minute,
+      recurrenceRule.second,
+      recurrenceRule.tz,
+    );
 
     const configs = Object.assign({}, defaults, config);
 
