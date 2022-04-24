@@ -1,66 +1,87 @@
+/* eslint-disable @typescript-eslint/ban-types */
+import { Injectable } from '@nestjs/common';
+import { v4 } from 'uuid';
+import { TimeoutOptions } from './interfaces/timeout-options.interface';
 import {
-  ICronJobConfig,
-  ICronObject,
-} from './interfaces/cron-job-config.interface';
-import { IJobConfig } from './interfaces/job-config.interface';
-import { Scheduler } from './scheduler';
-import { IGlobalConfig } from './interfaces/global-config.interface';
-import { defaults } from './defaults';
-import { RecurrenceRule } from 'node-schedule';
+  CronJobOptions,
+  IntervalJobOptions,
+  SchedulerRegistry,
+  TimeoutJobOptions,
+} from './scheduler.registry';
+import { SchedulerOrchestrator } from './scheduler.orchestrator';
+import { IntervalOptions } from './interfaces/interval-options.interface';
+import {
+  CronObject,
+  CronObjLiteral,
+  CronOptions,
+} from './interfaces/cron-options.interface';
 
+@Injectable()
 export class Schedule {
-  private readonly scheduler = Scheduler;
+  constructor(
+    private registry: SchedulerRegistry,
+    private schedulerOrchestrator: SchedulerOrchestrator,
+  ) {}
 
-  constructor(globalConfig?: IGlobalConfig) {
-    if (globalConfig) {
-      for (const key of Object.keys(globalConfig)) {
-        defaults[key] = globalConfig[key];
-      }
-    }
-  }
-
-  public cancelJob(key: string) {
-    this.scheduler.cancelJob(key);
-  }
-
-  public cancelJobs() {
-    this.scheduler.cancelJobs();
-  }
-
-  public scheduleCronJob(
-    key: string,
-    cron: string | ICronObject,
-    callback: JobCallback,
-    config?: ICronJobConfig,
-  ) {
-    this.scheduler.scheduleCronJob(key, cron, callback, config);
-  }
-
-  public scheduleRecurrenceJob(
-    key: string,
-    rule: RecurrenceRule,
-    cb: JobCallback,
-    config?: ICronJobConfig,
-    tryLock?: Promise<TryLock> | TryLock,
-  ) {
-    this.scheduler.scheduleRecurrenceJob(key, rule, cb, config, tryLock);
-  }
-
-  public scheduleIntervalJob(
-    key: string,
-    interval: number,
-    callback: JobCallback,
-    config?: IJobConfig,
-  ) {
-    this.scheduler.scheduleIntervalJob(key, interval, callback, config);
-  }
-
-  public scheduleTimeoutJob(
-    key: string,
+  public createTimeoutJob(
+    methodRef: Function,
     timeout: number,
-    callback: JobCallback,
-    config?: IJobConfig,
+    options: TimeoutOptions = {},
   ) {
-    this.scheduler.scheduleTimeoutJob(key, timeout, callback, config);
+    const name = options.name || v4();
+
+    this.registry.addTimeoutJob(name, { target: methodRef, timeout, options });
+    this.schedulerOrchestrator.mountTimeouts();
+  }
+
+  public createIntervalJob(
+    methodRef: Function,
+    interval: number,
+    options: IntervalOptions = {},
+  ) {
+    const name = options.name || v4();
+
+    this.registry.addIntervalJob(name, {
+      target: methodRef,
+      interval,
+      options,
+    });
+
+    this.schedulerOrchestrator.mountIntervals();
+  }
+
+  public createCronJob(
+    rule: string | number | Date | CronObject | CronObjLiteral,
+    methodRef,
+    options: CronOptions = {},
+  ) {
+    const name = options.name || v4();
+
+    this.registry.addCronJob(name, { target: methodRef, rule, options });
+    this.schedulerOrchestrator.mountCron();
+  }
+
+  public deleteTimeoutJob(name: string) {
+    this.registry.deleteTimeoutJob(name);
+  }
+
+  public deleteIntervalJob(name: string) {
+    this.registry.deleteIntervalJob(name);
+  }
+
+  public deleteCronJob(name: string) {
+    this.registry.deleteCronJob(name);
+  }
+
+  public getTimeoutJobs(): TimeoutJobOptions[] {
+    return [...this.registry.getTimeoutJobs().values()];
+  }
+
+  public getIntervalJobs(): IntervalJobOptions[] {
+    return [...this.registry.getIntervalJobs().values()];
+  }
+
+  public getCronJobs(): CronJobOptions[] {
+    return [...this.registry.getCronJobs().values()];
   }
 }
