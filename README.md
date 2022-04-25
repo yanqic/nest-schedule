@@ -27,224 +27,225 @@ import { Module } from '@nestjs/common';
 import { ScheduleModule } from 'nestjs-schedule';
 
 @Module({
-  imports: [ScheduleModule.register()],
+    imports: [ScheduleModule.forRoot()],
 })
 export class AppModule {}
 ```
 
 ```typescript
-import { Injectable } from '@nestjs/common';
-import { Cron, Interval, Timeout, NestSchedule } from 'nestjs-schedule';
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron, Timeout, Interval } from 'nestjs-schedule';
 
-@Injectable() // Only support SINGLETON scope
-export class ScheduleService extends NestSchedule {
-  @Cron('0 0 2 * *', {
-    startTime: new Date(),
-    endTime: new Date(new Date().getTime() + 24 * 60 * 60 * 1000),
-  })
-  async cronJob() {
-    console.log('executing cron job');
-  }
+@Injectable()
+export class TasksService {
+    private readonly logger = new Logger(TasksService.name);
 
-  @Timeout(5000)
-  onceJob() {
-    console.log('executing once job');
-  }
+    @Cron('45 * * * * *')
+    handleCron() {
+        this.logger.debug('Called when the current second is 45');
+    }
 
-  @Interval(2000)
-  intervalJob() {
-    console.log('executing interval job');
+    @Interval(5000)
+    handleInterval() {
+        this.logger.debug('Called every 5 seconds');
+    }
 
-    // if you want to cancel the job, you should return true;
-    return true;
-  }
+    @Timeout(5000)
+    handleTimeout() {
+        this.logger.debug('Called after 5 seconds');
+    }
 }
 ```
 
 ### Dynamic Schedule Job
 
 ```typescript
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectSchedule, Schedule } from 'nestjs-schedule';
 
 @Injectable()
-export class ScheduleService {
-  constructor(@InjectSchedule() private readonly schedule: Schedule) {}
+export class TasksService implements OnModuleInit {
+    private readonly logger = new Logger(TasksService.name);
 
-  createJob() {
-    // schedule a 2s interval job
-    this.schedule.scheduleIntervalJob('my-job', 2000, () => {
-      console.log('executing interval job');
-    });
-  }
+    constructor(@InjectSchedule() private readonly schedule: Schedule) {}
 
-  cancelJob() {
-    this.schedule.cancelJob('my-job');
-  }
+    execute() {
+        this.logger.debug('execute dynamic job');
+    }
+
+    onModuleInit() {
+        this.schedule.createIntervalJob(this.execute.bind(this), 3000, {
+            name: 'test_job',
+        });
+        this.schedule.deleteIntervalJob('test_job');
+    }
 }
 ```
 
 ### Distributed Support
 
+1. Implements Locker interface
 
 ```typescript
+import { Locker } from 'nestjs-schedule';
 import { Injectable } from '@nestjs/common';
-import { Cron, NestDistributedSchedule } from 'nestjs-schedule';
 
 @Injectable()
-export class ScheduleService extends NestDistributedSchedule {
-  constructor() {
-    super();
-  }
+export class ScheduleLocker implements Locker {
+    private name: string;
 
-  // jobKey or method name
-  /**
-   * @param jobKey: cron key or method name
-   */
-  async tryLock(jobKey: string) {
-    // redis lock example
-    const client = this.redisService.getClient();
-    const lockKey = `schedule:lock:${jobKey}`;
-    const locked = await client.set(lockKey, 1, 'EX', 60, 'NX');
-
-    if (lockFail) {
-      return false;
+    init(name: string): void {
+        this.name = name;
     }
 
-    return () => {
-      // Release here.
-      client.del(lockKey);
-    };
-  }
+    release(): any {}
 
-  @Cron({ rule: '0 3 0 * * 1', tz: 'Asia/Shanghai' }, { key: 'JOB_KEY_NAME' })
-  async cronJob() {
-    console.log('executing cron job');
-  }
+    async tryLock(): Promise<boolean> {
+      // use redis lock or other methods
+        return true;
+    }
 }
 ```
 
+2. Use your locker
+```typescript
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron, UseLocker } from '@nestjs-schedule';
+import { ScheduleLocker } from './schedule-locker';
+
+@Injectable()
+export class TasksService {
+  private readonly logger = new Logger(TasksService.name);
+
+  @Cron('45 * * * * *')
+  @UseLocker(ScheduleLocker)
+  handleCron() {
+    this.logger.debug('Called when the current second is 45');
+  }
+}
+```
 
 ## API
 
 ### class ScheduleModule
 
-#### static register\(config: IGlobalConfig\): DynamicModule
+#### static forRoot\(\): DynamicModule
 
-Register schedule module.
-
-| field                | type    | required | description                                                                      |
-| -------------------- | ------- | -------- | -------------------------------------------------------------------------------- |
-| config.enable        | boolean | false    | default is true, when false, the job will not execute                            |
-| config.maxRetry      | number  | false    | the max retry count, default is -1 not retry                                     |
-| config.retryInterval | number  | false    | the retry interval, default is 5000                                              |
-| config.waiting       | boolean | false    | the scheduler will not schedule job when this job is running, if waiting is true |
+Import schedule module.
 
 ### class Schedule
 
-#### scheduleCronJob(key: string, cron: string, callback: JobCallback, config?: ICronJobConfig)
+#### createTimeoutJob\(methodRef: Function, timeout: number, options?: TimeoutOptions\)
 
-Schedule a cron job.
+Dynamic create a timeout job.
 
-| field                | type                         | required | description                                                                        |
-| -------------------- | ---------------------------- | -------- | ---------------------------------------------------------------------------------- |
-| key                  | string                       | true     | The unique job key                                                                 |
-| cron                 | string                       | true     | The cron expression                                                                |
-| callback             | () => Promise&lt;boolean&gt; | boolean  | If return true in callback function, the schedule will cancel this job immediately |
-| config.startTime     | Date                         | false    | The start time of this job                                                         |
-| config.endTime       | Date                         | false    | The end time of this job                                                           |
-| config.enable        | boolean                      | false    | default is true, when false, the job will not execute                              |
-| config.maxRetry      | number                       | false    | the max retry count, default is -1 not retry                                       |
-| config.retryInterval | number                       | false    | the retry interval, default is 5000                                                |
-| config.waiting       | boolean                      | false    | the scheduler will not schedule job when this job is running, if waiting is true   |
-| config.immediate     | boolean                      | false    | running job immediately                                                            |
+| field     | type     | required | description    |
+| ----------| -------- | -------- | -------------- |
+| methodRef | Function | true     | job method     |
+| timeout   | number   | true     | milliseconds   |
+| locker   | Locker/undefined   | true     | locker for distribute schedule   |
+| options   |          | false    | see decorators |
 
-#### scheduleIntervalJob(key: string, interval: number, callback: JobCallback, config?: IJobConfig)
+#### createIntervalJob\(methodRef: Function, timeout: number, options?: IntervalOptions\)
 
-Schedule a interval job.
+Dynamic create a interval job.
 
-| field                | type                         | required | description                                                                        |
-| -------------------- | ---------------------------- | -------- | ---------------------------------------------------------------------------------- |
-| key                  | string                       | true     | The unique job key                                                                 |
-| interval             | number                       | true     | milliseconds                                                                       |
-| callback             | () => Promise&lt;boolean&gt; | boolean  | If return true in callback function, the schedule will cancel this job immediately |
-| config.enable        | boolean                      | false    | default is true, when false, the job will not execute                              |
-| config.maxRetry      | number                       | false    | the max retry count, default is -1 not retry                                       |
-| config.retryInterval | number                       | false    | the retry interval, default is 5000                                                |
-| config.waiting       | boolean                      | false    | the scheduler will not schedule job when this job is running, if waiting is true   |
-| config.immediate     | boolean                      | false    | running job immediately                                                            |
+| field     | type     | required | description    |
+| ----------| -------- | -------- | -------------- |
+| methodRef | Function | true     | job method     |
+| interval   | number   | true     | milliseconds   |
+| locker   | Locker/undefined   | true     | locker for distribute schedule   |
+| options   |          | false    | see decorators |
 
-#### scheduleTimeoutJob(key: string, timeout: number, callback: JobCallback, config?: IJobConfig)
+#### createCronJob\(rule: string | number | Date | CronObject | CronObjLiteral, methodRef, options?: CronOptions\)
 
-Schedule a timeout job.
+Dynamic create a cron job.
 
-| field                | type                         | required | description                                                                        |
-| -------------------- | ---------------------------- | -------- | ---------------------------------------------------------------------------------- |
-| key                  | string                       | true     | The unique job key                                                                 |
-| timeout              | number                       | true     | milliseconds                                                                       |
-| callback             | () => Promise&lt;boolean&gt; | boolean  | If return true in callback function, the schedule will cancel this job immediately |
-| config.enable        | boolean                      | false    | default is true, when false, the job will not execute                              |
-| config.maxRetry      | number                       | false    | the max retry count, default is -1 not retry                                       |
-| config.retryInterval | number                       | false    | the retry interval, default is 5000                                                |
-| config.immediate     | boolean                      | false    | running job immediately                                                            |
+| field     | type                                         | required | description                                   |
+| --------- | -------------------------------------------- | -------- | --------------------------------------------- |
+| rule      | Date string number CronObject CronObjLiteral | true     | the cron rule                                 |
+| methodRef | Function                                     | true     | job method                                    |
+| locker   | Locker/undefined   | true     | locker for distribute schedule   |
+| options   |                                              | false    | see decorators                                |
 
-#### cancelJob(key: string)
+#### deleteTimeoutJob\(name: string\)
 
-Cancel job.
+Delete a timeout job
+
+#### deleteIntervalJob\(name: string\)
+
+Delete a interval job
+
+#### deleteCronJob\(name: string\)
+
+Delete a cron job
+
+#### getTimeoutJobs\(\): TimeoutJobOptions[]
+
+Get all timeout jobs
+
+#### getIntervalJobs\(\): IntervalJobOptions[]
+
+Get all interval jobs
+
+#### getCronJobs\(\): CronJobOptions[]
+
+Get all cron jobs
 
 ## Decorators
 
-### Cron(expression: string, config?: ICronJobConfig): MethodDecorator
+### Cron(rule: string | number | Date | CronObject | CronObjLiteral, options?: CronOptions): MethodDecorator
 
 Schedule a cron job.
 
-| field                | type    | required | description                                                                      |
-| -------------------- | ------- | -------- | -------------------------------------------------------------------------------- |
-| expression           | string  | true     | the cron expression                                                              |
-| config.key           | string  | false    | The unique job key                                                               |
-| config.startTime     | Date    | false    | the job's start time                                                             |
-| config.endTime       | Date    | false    | the job's end time                                                               |
-| config.enable        | boolean | false    | default is true, when false, the job will not execute                            |
-| config.maxRetry      | number  | false    | the max retry count, default is -1 not retry                                     |
-| config.retryInterval | number  | false    | the retry interval, default is 5000                                              |
-| config.waiting       | boolean | false    | the scheduler will not schedule job when this job is running, if waiting is true |
-| config.immediate     | boolean | false    | running job immediately                                                          |
+| field           | type                                         | required | description                                   |
+| --------------- | -------------------------------------------- | -------- | --------------------------------------------- |
+| rule            | Date string number CronObject CronObjLiteral | true     | The cron rule                                 |
+| rule.dayOfWeek  | number                                       | true     | Timezone                                      |
+| options.name    | string                                       | false    | The unique job key                            |
+| options.retries | number                                       | false    | the max retry count, default is -1 not retry  |
+| options.retry   | number                                       | false    | the retry interval, default is 5000           |
 
-### Interval(milliseconds: number, config?: IJobConfig): MethodDecorator
+[CronObject CronObjLiteral](https://github.com/yanqic/nestjs-schdule/tree/master/lib/interfaces/cron-options.interface)]
+
+### Interval(timeout: number): MethodDecorator
+### Interval(name: string, timeout: number): MethodDecorator
+### Interval(name: string, timeout: number, options?: IntervalOptions): MethodDecorator
 
 Schedule a interval job.
 
-| field                | type    | required | description                                                                      |
-| -------------------- | ------- | -------- | -------------------------------------------------------------------------------- |
-| milliseconds         | number  | true     | milliseconds                                                                     |
-| config.key           | string  | false    | The unique job key                                                               |
-| config.enable        | boolean | false    | default is true, when false, the job will not execute                            |
-| config.maxRetry      | number  | false    | the max retry count, default is -1 not retry                                     |
-| config.retryInterval | number  | false    | the retry interval, default is 5000                                              |
-| config.waiting       | boolean | false    | the scheduler will not schedule job when this job is running, if waiting is true |
-| config.immediate     | boolean | false    | running job immediately                                                          |
+| field             | type    | required | description                                   |
+| ----------------- | ------- | -------- | --------------------------------------------- |
+| timeout           | number  | true     | milliseconds                                  |
+| options.retries   | number  | false    | the max retry count, default is -1 not retry  |
+| options.retry     | number  | false    | the retry interval, default is 5000           |
+| options.immediate | boolean | false    | executing job immediately                     |
 
-### Timeout(milliseconds: number, config?: IJobConfig): MethodDecorator
+### Timeout(timeout: number): MethodDecorator
+### Timeout(name: string, timeout: number): MethodDecorator
+### Timeout(name: string, timeout: number, options?: TimeoutOptions): MethodDecorator
 
 Schedule a timeout job.
 
-| field                | type    | required | description                                           |
-| -------------------- | ------- | -------- | ----------------------------------------------------- |
-| milliseconds         | number  | true     | milliseconds                                          |
-| config.key           | string  | false    | The unique job key                                    |
-| config.enable        | boolean | false    | default is true, when false, the job will not execute |
-| config.maxRetry      | number  | false    | the max retry count, default is -1 not retry          |
-| config.retryInterval | number  | false    | the retry interval, default is 5000                   |
-| config.immediate     | boolean | false    | running job immediately                               |
+| field             | type    | required | description                                   |
+| ----------------- | ------- | -------- | --------------------------------------------- |
+| timeout           | number  | true     | milliseconds                                  |
+| options.retries   | number  | false    | the max retry count, default is -1 not retry  |
+| options.retry     | number  | false    | the retry interval, default is 5000           |
+| options.immediate | boolean | false    | executing job immediately                     |
 
 ### InjectSchedule(): PropertyDecorator
 
 Inject Schedule instance
 
-### UseLocker(locker: ILocker | Function): MethodDecorator
+### UseLocker(locker: Locker | Function): MethodDecorator
 
-Make your job support distribution.
+Set a distributed locker for job.
+
+## Stay in touch
+
+- Author - [yanqic](https://github.com/yanqic)
 
 ## License
 
-- NestSchedule is [MIT licensed](LICENSE).
+  NestCloud is [MIT licensed](LICENSE).
