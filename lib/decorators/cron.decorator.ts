@@ -1,15 +1,15 @@
 import { applyDecorators, SetMetadata } from '@nestjs/common';
 import { SchedulerType } from '../enums/scheduler-type.enum';
 import {
-  SCHEDULER_NAME,
-  SCHEDULER_TYPE,
-  SCHEDULE_CRON_OPTIONS,
-  SCHEDULER_OPTIONS,
+    SCHEDULER_NAME,
+    SCHEDULER_TYPE,
+    SCHEDULE_CRON_OPTIONS,
+    SCHEDULER_OPTIONS,
 } from '../schedule.constants';
 import {
-  CronObject,
-  CronObjLiteral,
-  CronOptions,
+    CronObject,
+    CronObjLiteral,
+    CronOptions,
 } from '../interfaces/cron-options.interface';
 
 /**
@@ -18,15 +18,15 @@ import {
  * @param options Job execution options.
  */
 export function Cron(
-  rule: string | number | Date | CronObject | CronObjLiteral,
-  options?: CronOptions,
+    rule: string | number | Date | CronObject | CronObjLiteral,
+    options?: CronOptions,
 ): MethodDecorator {
-  const name = options && options.name;
+    const name = options && options.name;
 
-  return applyDecorators(
-    SetMetadata(SCHEDULE_CRON_OPTIONS, rule),
-    SetMetadata(SCHEDULER_NAME, name),
-    SetMetadata(SCHEDULER_OPTIONS, options),
-    SetMetadata(SCHEDULER_TYPE, SchedulerType.CRON),
-  );
+    return applyDecorators(
+        SetMetadata(SCHEDULE_CRON_OPTIONS, rule),
+        SetMetadata(SCHEDULER_NAME, name),
+        SetMetadata(SCHEDULER_OPTIONS, options),
+        SetMetadata(SCHEDULER_TYPE, SchedulerType.CRON),
+    );
 }

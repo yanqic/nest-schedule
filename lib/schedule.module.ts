@@ -10,28 +10,28 @@ import { Scanner } from './scanner';
 import { SCHEDULE } from './schedule.constants';
 
 @Module({
-  imports: [DiscoveryModule],
-  providers: [SchedulerMetadataAccessor, SchedulerOrchestrator, Scanner],
+    imports: [DiscoveryModule],
+    providers: [SchedulerMetadataAccessor, SchedulerOrchestrator, Scanner],
 })
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class ScheduleModule {
-  static forRoot(): DynamicModule {
-    const scheduleProvider = {
-      provide: SCHEDULE,
-      useExisting: Schedule,
-    };
+    static forRoot(): DynamicModule {
+        const scheduleProvider = {
+            provide: SCHEDULE,
+            useExisting: Schedule,
+        };
 
-    return {
-      global: true,
-      module: ScheduleModule,
-      providers: [
-        ScheduleExplorer,
-        SchedulerRegistry,
-        ScheduleWrapper,
-        Schedule,
-        scheduleProvider,
-      ],
-      exports: [scheduleProvider],
-    };
-  }
+        return {
+            global: true,
+            module: ScheduleModule,
+            providers: [
+                ScheduleExplorer,
+                SchedulerRegistry,
+                ScheduleWrapper,
+                Schedule,
+                scheduleProvider,
+            ],
+            exports: [scheduleProvider],
+        };
+    }
 }

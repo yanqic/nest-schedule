@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { DiscoveryService } from '@nestjs/core';
 import { v4 } from 'uuid';
@@ -11,93 +12,95 @@ import { Scanner } from './scanner';
 
 @Injectable()
 export class ScheduleExplorer implements OnModuleInit {
-  constructor(
-    private readonly schedulerOrchestrator: SchedulerOrchestrator,
-    private readonly discoveryService: DiscoveryService,
-    private readonly metadataAccessor: SchedulerMetadataAccessor,
-    private readonly metadataScanner: MetadataScanner,
-    private readonly scanner: Scanner,
-  ) {}
+    constructor(
+        private readonly schedulerOrchestrator: SchedulerOrchestrator,
+        private readonly discoveryService: DiscoveryService,
+        private readonly metadataAccessor: SchedulerMetadataAccessor,
+        private readonly metadataScanner: MetadataScanner,
+        private readonly scanner: Scanner,
+    ) {}
 
-  onModuleInit() {
-    this.explore();
-  }
-
-  explore() {
-    const providers: InstanceWrapper[] = [
-      ...this.discoveryService.getProviders(),
-      ...this.discoveryService.getControllers(),
-    ];
-
-    providers.forEach((wrapper: InstanceWrapper) => {
-      const { instance } = wrapper;
-
-      if (!instance || typeof instance === 'string') {
-        return;
-      }
-
-      this.metadataScanner.scanFromPrototype(
-        instance,
-        Object.getPrototypeOf(instance),
-        (key: string) => this.lookupSchedulers(instance, key),
-      );
-    });
-  }
-
-  lookupSchedulers(instance: Record<string, Function>, key: string) {
-    const methodRef = instance[key];
-    const metadata = this.metadataAccessor.getSchedulerType(methodRef);
-    const options = this.metadataAccessor.getJobOptions(methodRef);
-    const LockerClass = this.metadataAccessor.getLocker(methodRef);
-    const lockerInstance: Locker = this.scanner.findInjectable<Locker>(
-      LockerClass,
-    );
-
-    switch (metadata) {
-      case SchedulerType.CRON: {
-        const cronMetadata = this.metadataAccessor.getCronMetadata(methodRef);
-
-        return this.schedulerOrchestrator.addCron(
-          methodRef.bind(instance),
-          cronMetadata!,
-          lockerInstance,
-          {
-            ...options!,
-          },
-        );
-      }
-
-      case SchedulerType.TIMEOUT: {
-        const timeoutMetadata = this.metadataAccessor.getTimeoutMetadata(
-          methodRef,
-        );
-        const name = this.metadataAccessor.getSchedulerName(methodRef);
-
-        return this.schedulerOrchestrator.addTimeout(
-          methodRef.bind(instance),
-          timeoutMetadata!.timeout,
-          name || v4(),
-          lockerInstance,
-          options!,
-        );
-      }
-
-      case SchedulerType.INTERVAL: {
-        const intervalMetadata = this.metadataAccessor.getIntervalMetadata(
-          methodRef,
-        );
-        const name = this.metadataAccessor.getSchedulerName(methodRef);
-
-        return this.schedulerOrchestrator.addInterval(
-          methodRef.bind(instance),
-          intervalMetadata!.timeout,
-          name || v4(),
-          lockerInstance,
-          options!,
-        );
-      }
-
-      default:
+    onModuleInit() {
+        this.explore();
     }
-  }
+
+    explore() {
+        const providers: InstanceWrapper[] = [
+            ...this.discoveryService.getProviders(),
+            ...this.discoveryService.getControllers(),
+        ];
+
+        providers.forEach((wrapper: InstanceWrapper) => {
+            const { instance } = wrapper;
+
+            if (!instance || typeof instance === 'string') {
+                return;
+            }
+
+            this.metadataScanner.scanFromPrototype(
+                instance,
+                Object.getPrototypeOf(instance),
+                (key: string) => this.lookupSchedulers(instance, key),
+            );
+        });
+    }
+
+    lookupSchedulers(instance: Record<string, Function>, key: string) {
+        const methodRef = instance[key];
+        const metadata = this.metadataAccessor.getSchedulerType(methodRef);
+        const options = this.metadataAccessor.getJobOptions(methodRef);
+        const LockerClass = this.metadataAccessor.getLocker(methodRef);
+        const lockerInstance: Locker = this.scanner.findInjectable<Locker>(
+            LockerClass!,
+        );
+
+        switch (metadata) {
+            case SchedulerType.CRON: {
+                const cronMetadata = this.metadataAccessor.getCronMetadata(
+                    methodRef,
+                );
+
+                return this.schedulerOrchestrator.addCron(
+                    methodRef.bind(instance),
+                    cronMetadata!,
+                    lockerInstance,
+                    {
+                        ...options!,
+                    },
+                );
+            }
+
+            case SchedulerType.TIMEOUT: {
+                const timeoutMetadata = this.metadataAccessor.getTimeoutMetadata(
+                    methodRef,
+                );
+                const name = this.metadataAccessor.getSchedulerName(methodRef);
+
+                return this.schedulerOrchestrator.addTimeout(
+                    methodRef.bind(instance),
+                    timeoutMetadata!.timeout,
+                    name || v4(),
+                    lockerInstance,
+                    options!,
+                );
+            }
+
+            case SchedulerType.INTERVAL: {
+                const intervalMetadata = this.metadataAccessor.getIntervalMetadata(
+                    methodRef,
+                );
+                const name = this.metadataAccessor.getSchedulerName(methodRef);
+
+                return this.schedulerOrchestrator.addInterval(
+                    methodRef.bind(instance),
+                    intervalMetadata!.timeout,
+                    name || v4(),
+                    lockerInstance,
+                    options!,
+                );
+            }
+
+            default:
+        }
+    }
 }

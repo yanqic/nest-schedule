@@ -31,7 +31,7 @@
 
     "outDir": "./dist",
     "baseUrl": "./",
-    "rootDir": "./lib"
+    "rootDir": "lib"
   },
   "exclude": ["tsconfig.json", "scripts", "dist", "test", "node_modules", "**/*spec.ts"]
 }

@@ -1,5 +1,5 @@
 export enum SchedulerType {
-  CRON = 'cron',
-  TIMEOUT = 'timeout',
-  INTERVAL = 'interval',
+    CRON = 'cron',
+    TIMEOUT = 'timeout',
+    INTERVAL = 'interval',
 }

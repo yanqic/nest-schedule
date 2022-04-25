@@ -1,7 +1,5 @@
 export interface Locker {
-  init(name: string): void;
+    tryLock(jobName: string): Promise<boolean> | boolean;
 
-  tryLock(): Promise<boolean> | boolean;
-
-  release(): any;
+    release(jobName: string): any;
 }
