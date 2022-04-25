@@ -50,9 +50,9 @@ export class ScheduleExplorer implements OnModuleInit {
         const metadata = this.metadataAccessor.getSchedulerType(methodRef);
         const options = this.metadataAccessor.getJobOptions(methodRef);
         const LockerClass = this.metadataAccessor.getLocker(methodRef);
-        const lockerInstance: Locker = this.scanner.findInjectable<Locker>(
-            LockerClass!,
-        );
+        const lockerInstance: Locker | undefined = this.scanner.findInjectable<
+            Locker
+        >(LockerClass)!;
 
         switch (metadata) {
             case SchedulerType.CRON: {

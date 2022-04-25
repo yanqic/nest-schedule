@@ -15,7 +15,7 @@ export class Scanner implements OnModuleInit {
         this.container = this.findContainer()!;
     }
 
-    public findInjectable<T>(metaType: Function): T | undefined {
+    public findInjectable<T>(metaType?: Function): T | undefined {
         if (metaType) {
             const modules = this.container?.getModules().values();
 

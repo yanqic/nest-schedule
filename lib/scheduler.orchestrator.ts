@@ -130,14 +130,16 @@ export class SchedulerOrchestrator
     clearTimeouts() {
         const keys = Object.keys(this.registry.getTimeoutJobs());
 
-        keys.forEach(key => clearTimeout(this.registry.getTimeoutJob(key).ref));
+        keys.forEach(key =>
+            clearTimeout(this.registry.getTimeoutJob(key).ref!),
+        );
     }
 
     clearIntervals() {
         const keys = Object.keys(this.registry.getIntervalJobs());
 
         keys.forEach(key =>
-            clearInterval(this.registry.getIntervalJob(key).ref),
+            clearInterval(this.registry.getIntervalJob(key).ref!),
         );
     }
 
