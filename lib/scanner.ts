@@ -20,25 +20,27 @@ export class Scanner implements OnModuleInit {
             const modules = this.container?.getModules().values();
 
             for (const module of modules) {
-                const instanceWrapper = module.injectables.get(metaType.name);
+                if (!module.injectables.size) {
+                    continue;
+                }
 
-                if (
-                    instanceWrapper &&
-                    module.injectables.has(metaType.name) &&
-                    instanceWrapper.metatype === metaType
-                ) {
-                    const instanceWrapper:
-                        | InstanceWrapper
-                        | undefined = module.injectables.get(metaType.name);
+                // Nest v8 no longer stringifies class names but rather uses class references to connect injectable
+                let instanceWrapper:
+                    | InstanceWrapper
+                    // @ts-ignore
+                    | undefined = module.injectables.get(metaType);
 
-                    if (instanceWrapper) {
-                        const instanceHost = instanceWrapper.getInstanceByContextId(
-                            STATIC_CONTEXT,
-                        );
+                if (!instanceWrapper) {
+                    instanceWrapper = module.injectables.get(metaType.name);
+                }
 
-                        if (instanceHost.isResolved && instanceHost.instance) {
-                            return instanceHost.instance;
-                        }
+                if (instanceWrapper && instanceWrapper.metatype === metaType) {
+                    const instanceHost = instanceWrapper.getInstanceByContextId(
+                        STATIC_CONTEXT,
+                    );
+
+                    if (instanceHost.isResolved && instanceHost.instance) {
+                        return instanceHost.instance;
                     }
                 }
             }
