@@ -65,7 +65,7 @@ export class ScheduleWrapper {
                     const locked = await locker.tryLock(name);
 
                     if (!locked) {
-                        logger.error(TRY_LOCK_FAILED(name));
+                        logger.warn(TRY_LOCK_FAILED(name));
 
                         return;
                     }

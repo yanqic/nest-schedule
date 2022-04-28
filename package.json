@@ -1,6 +1,6 @@
 {
   "name": "nestjs-schedule",
-  "version": "0.1.3",
+  "version": "0.1.5",
   "description": "nestjs distributed timer schedule lib",
   "author": "yanqic <yanqic@hotmail.com>",
   "license": "MIT",

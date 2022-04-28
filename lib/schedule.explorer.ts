@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { DiscoveryService } from '@nestjs/core';
 import { v4 } from 'uuid';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
@@ -9,6 +9,7 @@ import { SchedulerMetadataAccessor } from './schedule-metadata.accessor';
 import { SchedulerOrchestrator } from './scheduler.orchestrator';
 import { Locker } from './interfaces/locker.interface';
 import { Scanner } from './scanner';
+import { SCHEDULE_LOCKER_SERVICE } from './schedule.constants';
 
 @Injectable()
 export class ScheduleExplorer implements OnModuleInit {
@@ -18,6 +19,7 @@ export class ScheduleExplorer implements OnModuleInit {
         private readonly metadataAccessor: SchedulerMetadataAccessor,
         private readonly metadataScanner: MetadataScanner,
         private readonly scanner: Scanner,
+        @Inject(SCHEDULE_LOCKER_SERVICE) private readonly locker: Locker,
     ) {}
 
     onModuleInit() {
@@ -50,9 +52,8 @@ export class ScheduleExplorer implements OnModuleInit {
         const metadata = this.metadataAccessor.getSchedulerType(methodRef);
         const options = this.metadataAccessor.getJobOptions(methodRef);
         const LockerClass = this.metadataAccessor.getLocker(methodRef);
-        const lockerInstance: Locker | undefined = this.scanner.findInjectable<
-            Locker
-        >(LockerClass)!;
+        const lockerInstance: Locker | undefined =
+            this.scanner.findInjectable<Locker>(LockerClass)! || this.locker;
 
         switch (metadata) {
             case SchedulerType.CRON: {
