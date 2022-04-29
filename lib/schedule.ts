@@ -37,8 +37,8 @@ export class Schedule {
     public createTimeoutJob(
         methodRef: Function,
         timeout: number,
-        locker?: Locker | false,
         options: TimeoutOptions = {},
+        locker?: Locker | false,
     ) {
         const name = options.name || v4();
 
@@ -55,8 +55,8 @@ export class Schedule {
     public createIntervalJob(
         methodRef: Function,
         interval: number,
-        locker?: Locker | false,
         options: IntervalOptions = {},
+        locker?: Locker | false,
     ) {
         const name = options.name || v4();
 
@@ -73,8 +73,8 @@ export class Schedule {
     public createCronJob(
         rule: string | number | Date | CronObject | CronObjLiteral,
         methodRef,
-        locker?: Locker | false,
         options: CronOptions = {},
+        locker?: Locker | false,
     ) {
         const name = options.name || v4();
 

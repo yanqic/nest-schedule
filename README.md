@@ -12,7 +12,7 @@
 
 ## Description
 
-Distributed Schedule module for [Nest](https://github.com/nestjs/nest) based on the node-schedule package.
+Distributed Schedule module for [Nest.js](https://github.com/nestjs/nest) based on the node-schedule package.
 
 ## Installation
 
@@ -27,7 +27,12 @@ import { Module } from '@nestjs/common';
 import { ScheduleModule } from 'nestjs-schedule';
 
 @Module({
-    imports: [ScheduleModule.forRoot()],
+    imports: [ScheduleModule.forRoot({
+        // Optional: Import external dependent modules if you need
+        imports: [MyLockerModule]
+        // Optional: Inject your global custom lock
+        useClass: MyScheduleLocker
+    })],
 })
 export class AppModule {}
 ```
@@ -92,22 +97,18 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class ScheduleLocker implements Locker {
-    private name: string;
 
-    init(name: string): void {
-        this.name = name;
-    }
+    release(jobName: string): any {}
 
-    release(): any {}
-
-    async tryLock(): Promise<boolean> {
-      // use redis lock or other methods
+    async tryLock(jobName: string): Promise<boolean> {
+        // use redis lock or other methods
         return true;
     }
 }
 ```
 
 2. Use your locker
+
 ```typescript
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, UseLocker } from '@nestjs-schedule';
@@ -115,13 +116,14 @@ import { ScheduleLocker } from './schedule-locker';
 
 @Injectable()
 export class TasksService {
-  private readonly logger = new Logger(TasksService.name);
+    private readonly logger = new Logger(TasksService.name);
 
-  @Cron('45 * * * * *')
-  @UseLocker(ScheduleLocker)
-  handleCron() {
-    this.logger.debug('Called when the current second is 45');
-  }
+    @Cron('45 * * * * *')
+    // remove it if you want to use the lock which injected forRoot
+    @UseLocker(ScheduleLocker)
+    handleCron() {
+        this.logger.debug('Called when the current second is 45');
+    }
 }
 ```
 
@@ -139,34 +141,35 @@ Import schedule module.
 
 Dynamic create a timeout job.
 
-| field     | type     | required | description    |
-| ----------| -------- | -------- | -------------- |
-| methodRef | Function | true     | job method     |
-| timeout   | number   | true     | milliseconds   |
-| locker   | Locker/undefined   | true     | locker for distribute schedule   |
-| options   |          | false    | see decorators |
+| field     | type         | required | description          |
+| --------- | ------------ | -------- | -------------------- |
+| methodRef | Function     | true     | job method           |
+| timeout   | number       | true     | milliseconds         |
+| options   |              | false    | see decorators       |
+| locker    | Locker/false | false    | custom lock instance |
 
+> If the locker is configured as false, the default lock will be ignored
 #### createIntervalJob\(methodRef: Function, timeout: number, options?: IntervalOptions\)
 
 Dynamic create a interval job.
 
-| field     | type     | required | description    |
-| ----------| -------- | -------- | -------------- |
-| methodRef | Function | true     | job method     |
-| interval   | number   | true     | milliseconds   |
-| locker   | Locker/undefined   | true     | locker for distribute schedule   |
-| options   |          | false    | see decorators |
+| field     | type         | required | description          |
+| --------- | ------------ | -------- | -------------------- |
+| methodRef | Function     | true     | job method           |
+| interval  | number       | true     | milliseconds         |
+| options   |              | false    | see decorators       |
+| locker    | Locker/false | false    | custom lock instance |
 
 #### createCronJob\(rule: string | number | Date | CronObject | CronObjLiteral, methodRef, options?: CronOptions\)
 
 Dynamic create a cron job.
 
-| field     | type                                         | required | description                                   |
-| --------- | -------------------------------------------- | -------- | --------------------------------------------- |
-| rule      | Date string number CronObject CronObjLiteral | true     | the cron rule                                 |
-| methodRef | Function                                     | true     | job method                                    |
-| locker   | Locker/undefined   | true     | locker for distribute schedule   |
-| options   |                                              | false    | see decorators                                |
+| field     | type                                         | required | description          |
+| --------- | -------------------------------------------- | -------- | -------------------- |
+| rule      | Date string number CronObject CronObjLiteral | true     | the cron rule        |
+| methodRef | Function                                     | true     | job method           |
+| options   |                                              | false    | see decorators       |
+| locker    | Locker/false                                 | false    | custom lock instance |
 
 #### deleteTimeoutJob\(name: string\)
 
@@ -198,41 +201,45 @@ Get all cron jobs
 
 Schedule a cron job.
 
-| field           | type                                         | required | description                                   |
-| --------------- | -------------------------------------------- | -------- | --------------------------------------------- |
-| rule            | Date string number CronObject CronObjLiteral | true     | The cron rule                                 |
-| rule.dayOfWeek  | number                                       | true     | Timezone                                      |
-| options.name    | string                                       | false    | The unique job key                            |
-| options.retries | number                                       | false    | the max retry count, default is -1 not retry  |
-| options.retry   | number                                       | false    | the retry interval, default is 5000           |
+| field           | type                                         | required | description                                  |
+| --------------- | -------------------------------------------- | -------- | -------------------------------------------- |
+| rule            | Date string number CronObject CronObjLiteral | true     | The cron rule                                |
+| rule.dayOfWeek  | number                                       | true     | Timezone                                     |
+| options.name    | string                                       | false    | The unique job key.**Distributed lock need it**                           |
+| options.retries | number                                       | false    | the max retry count, default is -1 not retry |
+| options.retry   | number                                       | false    | the retry interval, default is 5000          |
 
-[CronObject CronObjLiteral](https://github.com/yanqic/nestjs-schdule/tree/master/lib/interfaces/cron-options.interface)]
+[CronObject CronObjLiteral](https://github.com/yanqic/nest-schedule/blob/main/lib/interfaces/cron-options.interface.ts)
 
 ### Interval(timeout: number): MethodDecorator
+
 ### Interval(name: string, timeout: number): MethodDecorator
+
 ### Interval(name: string, timeout: number, options?: IntervalOptions): MethodDecorator
 
 Schedule a interval job.
 
-| field             | type    | required | description                                   |
-| ----------------- | ------- | -------- | --------------------------------------------- |
-| timeout           | number  | true     | milliseconds                                  |
-| options.retries   | number  | false    | the max retry count, default is -1 not retry  |
-| options.retry     | number  | false    | the retry interval, default is 5000           |
-| options.immediate | boolean | false    | executing job immediately                     |
+| field             | type    | required | description                                  |
+| ----------------- | ------- | -------- | -------------------------------------------- |
+| timeout           | number  | true     | milliseconds                                 |
+| options.retries   | number  | false    | the max retry count, default is -1 not retry |
+| options.retry     | number  | false    | the retry interval, default is 5000          |
+| options.immediate | boolean | false    | executing job immediately                    |
 
 ### Timeout(timeout: number): MethodDecorator
+
 ### Timeout(name: string, timeout: number): MethodDecorator
+
 ### Timeout(name: string, timeout: number, options?: TimeoutOptions): MethodDecorator
 
 Schedule a timeout job.
 
-| field             | type    | required | description                                   |
-| ----------------- | ------- | -------- | --------------------------------------------- |
-| timeout           | number  | true     | milliseconds                                  |
-| options.retries   | number  | false    | the max retry count, default is -1 not retry  |
-| options.retry     | number  | false    | the retry interval, default is 5000           |
-| options.immediate | boolean | false    | executing job immediately                     |
+| field             | type    | required | description                                  |
+| ----------------- | ------- | -------- | -------------------------------------------- |
+| timeout           | number  | true     | milliseconds                                 |
+| options.retries   | number  | false    | the max retry count, default is -1 not retry |
+| options.retry     | number  | false    | the retry interval, default is 5000          |
+| options.immediate | boolean | false    | executing job immediately                    |
 
 ### InjectSchedule(): PropertyDecorator
 
@@ -244,8 +251,8 @@ Set a distributed locker for job.
 
 ## Stay in touch
 
-- Author - [yanqic](https://github.com/yanqic)
+-   Author - [yanqic](https://github.com/yanqic)
 
 ## License
 
-  NestCloud is [MIT licensed](LICENSE).
+NestCloud is [MIT licensed](LICENSE).
