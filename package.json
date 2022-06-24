@@ -15,7 +15,7 @@
     "format": "prettier --write \"{lib,test}/**/*.ts\"",
     "prepublish:npm": "npm run build",
     "publish:npm": "npm publish",
-    "test": "jest --config ./tests/jest-e2e.json --runInBand"
+    "test": "jest --config ./test/jest-e2e.json --runInBand"
   },
   "peerDependencies": {
     "@nestjs/common": ">=7.0.0",
