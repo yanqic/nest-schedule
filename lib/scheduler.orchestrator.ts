@@ -21,7 +21,8 @@ import { IntervalOptions } from './interfaces/interval-options.interface';
 
 @Injectable()
 export class SchedulerOrchestrator
-    implements OnApplicationBootstrap, OnApplicationShutdown {
+    implements OnApplicationBootstrap, OnApplicationShutdown
+{
     private readonly logger = new Logger('Schedule');
 
     constructor(
@@ -128,25 +129,17 @@ export class SchedulerOrchestrator
     }
 
     clearTimeouts() {
-        const keys = Object.keys(this.registry.getTimeoutJobs());
-
-        keys.forEach(key =>
-            clearTimeout(this.registry.getTimeoutJob(key).ref!),
-        );
+        this.registry.getTimeoutJobs().forEach((job) => clearTimeout(job.ref!));
     }
 
     clearIntervals() {
-        const keys = Object.keys(this.registry.getIntervalJobs());
-
-        keys.forEach(key =>
-            clearInterval(this.registry.getIntervalJob(key).ref!),
-        );
+        this.registry
+            .getIntervalJobs()
+            .forEach((job) => clearInterval(job.ref!));
     }
 
     closeCronJobs() {
-        const keys = Object.keys(this.registry.getCronJobs());
-
-        keys.forEach(key => this.registry.getCronJob(key).ref!.cancel());
+        this.registry.getCronJobs().forEach((job) => job.ref!.cancel());
     }
 
     addTimeout(
