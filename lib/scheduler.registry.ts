@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Job } from 'node-schedule';
-import { DUPLICATE_SCHEDULER, NO_SCHEDULER_FOUND } from './schedule.messages';
+import { DUPLICATE_SCHEDULER } from './schedule.messages';
 import { Locker } from './interfaces/locker.interface';
 import { TimeoutOptions } from './interfaces/timeout-options.interface';
 import { IntervalOptions } from './interfaces/interval-options.interface';
@@ -49,37 +49,19 @@ export type CronJobOptions = TargetHost & CronHost & RefHost<Job>;
 @Injectable()
 export class SchedulerRegistry {
     private readonly cronJobs = new Map<string, CronJobOptions>();
-    private readonly timeouts = new Map<string, TimeoutJobOptions>();
-    private readonly intervals = new Map<string, IntervalJobOptions>();
+    private readonly timeoutJobs = new Map<string, TimeoutJobOptions>();
+    private readonly intervalJobs = new Map<string, IntervalJobOptions>();
 
-    getCronJob(name: string): CronJobOptions {
-        const job = this.cronJobs.get(name);
-
-        if (!job) {
-            throw new Error(NO_SCHEDULER_FOUND('Cron Job', name));
-        }
-
-        return job;
+    getCronJob(name: string) {
+        return this.cronJobs.get(name);
     }
 
-    getIntervalJob(name: string): IntervalJobOptions {
-        const job = this.intervals.get(name);
-
-        if (typeof job === 'undefined') {
-            throw new Error(NO_SCHEDULER_FOUND('Interval', name));
-        }
-
-        return job;
+    getIntervalJob(name: string) {
+        return this.intervalJobs.get(name);
     }
 
-    getTimeoutJob(name: string): TimeoutJobOptions {
-        const job = this.timeouts.get(name);
-
-        if (typeof job === 'undefined') {
-            throw new Error(NO_SCHEDULER_FOUND('Timeout', name));
-        }
-
-        return job;
+    getTimeoutJob(name: string) {
+        return this.timeoutJobs.get(name);
     }
 
     addCronJob(name: string, cronJob: CronJobOptions) {
@@ -93,23 +75,23 @@ export class SchedulerRegistry {
     }
 
     addIntervalJob(name: string, intervalJob: IntervalJobOptions) {
-        const job = this.intervals.get(name);
+        const job = this.intervalJobs.get(name);
 
         if (job) {
             throw new Error(DUPLICATE_SCHEDULER('Interval', name));
         }
 
-        this.intervals.set(name, intervalJob);
+        this.intervalJobs.set(name, intervalJob);
     }
 
     addTimeoutJob(name: string, timeoutJob: TimeoutJobOptions) {
-        const job = this.timeouts.get(name);
+        const job = this.timeoutJobs.get(name);
 
         if (job) {
             throw new Error(DUPLICATE_SCHEDULER('Timeout', name));
         }
 
-        this.timeouts.set(name, timeoutJob);
+        this.timeoutJobs.set(name, timeoutJob);
     }
 
     getCronJobs(): Map<string, CronJobOptions> {
@@ -117,31 +99,37 @@ export class SchedulerRegistry {
     }
 
     deleteCronJob(name: string) {
-        const cronJob = this.getCronJob(name);
+        const job = this.cronJobs.get(name);
 
-        cronJob.job?.cancel();
-        this.cronJobs.delete(name);
+        if (job) {
+            job.job?.cancel();
+            this.cronJobs.delete(name);
+        }
     }
 
     getIntervalJobs(): Map<string, IntervalJobOptions> {
-        return this.intervals;
+        return this.intervalJobs;
     }
 
     deleteIntervalJob(name: string) {
-        const job = this.getIntervalJob(name);
+        const job = this.intervalJobs.get(name);
 
-        clearInterval(job.ref!);
-        this.intervals.delete(name);
+        if (job) {
+            clearInterval(job.ref!);
+            this.intervalJobs.delete(name);
+        }
     }
 
     getTimeoutJobs(): Map<string, TimeoutJobOptions> {
-        return this.timeouts;
+        return this.timeoutJobs;
     }
 
     deleteTimeoutJob(name: string) {
-        const job = this.getTimeoutJob(name);
+        const job = this.timeoutJobs.get(name);
 
-        clearTimeout(job.ref!);
-        this.timeouts.delete(name);
+        if (job) {
+            clearTimeout(job.ref!);
+            this.timeoutJobs.delete(name);
+        }
     }
 }
